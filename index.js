@@ -65,7 +65,8 @@ app.delete('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndDelete(id)
         .then(result => {
             res.status(202).end();
-        });
+        })
+        .catch(error => next(error));
 });
 
 app.post('/api/persons', (req,res) => {
@@ -94,13 +95,17 @@ app.post('/api/persons', (req,res) => {
     });
 });
 
-const getRandomId = (max) => Math.floor(Math.random() * max);
-
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint'});
 };
 
+const errorHandler = (error, request, response, next) => {
+    console.log(error);
+    next(error);
+};
+
 app.use(unknownEndpoint);
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
