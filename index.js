@@ -60,10 +60,12 @@ app.get('/api/persons/:id', (req,res) => {
         .catch( error => res.status(404).end() );
 });
 
-app.delete('/api/persons/:id', (req,res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
     const id = req.params.id;
-    persons = persons.filter(person => person.id !== id);
-    res.status(202).end();
+    Person.findByIdAndDelete(id)
+        .then(result => {
+            res.status(202).end();
+        });
 });
 
 app.post('/api/persons', (req,res) => {
