@@ -75,20 +75,21 @@ app.post('/api/persons', (req,res) => {
         });
     }
 
-    if (persons.find(p => p.name === body.name)){
-        return res.status(400).json({
-            error: 'name must be unique'
-        });
-    }
+    // ignore duplicates at this stage
+    // if (persons.find(p => p.name === body.name)){
+    //     return res.status(400).json({
+    //         error: 'name must be unique'
+    //     });
+    // }
 
-    const person = {
-        id: String(getRandomId(10000)),
+    const newPerson = new Person({
         name: body.name,
         number: body.number
-    };
+    });
 
-    persons = persons.concat(person);
-    res.status(200).json(person);
+    newPerson.save().then(addedPerson => {
+        res.status(200).json(addedPerson);
+    });
 });
 
 const getRandomId = (max) => Math.floor(Math.random() * max);
