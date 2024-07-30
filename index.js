@@ -1,7 +1,9 @@
-
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const Person = require('./model/person');
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
@@ -14,6 +16,7 @@ morgan.token('post-body', (req, res) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms  :post-body'));
 
+const url = process.env.MONGODB_URI;
 let persons = [
     { 
       "id": "1",
@@ -47,18 +50,14 @@ app.get('/info', (req, res) => {
 });
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons);
+    Person.find({}).then(result => res.json(result));
 });
 
 app.get('/api/persons/:id', (req,res) => {
     const id = req.params.id;
-    const person = persons.find(person => person.id === id);
-    
-    if (!person){
-        return res.status(404).end();
-    }
-
-    res.json(person);
+    Person.findById(id)
+        .then( person => res.json(person) )
+        .catch( error => res.status(404).end() );
 });
 
 app.delete('/api/persons/:id', (req,res) => {
@@ -100,5 +99,5 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
