@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const Person = require('./model/person');
 const mongoose = require('mongoose');
+const { resolve } = require('path');
 
 const app = express();
 app.use(cors());
@@ -51,14 +52,8 @@ app.delete('/api/persons/:id', (req, res, next) => {
         .catch(error => next(error));
 });
 
-app.post('/api/persons', (req,res) => {
+app.post('/api/persons', (req,res,next) => {
     const body = req.body;
-
-    if (!body.name || !body.number) {
-        return res.status(400).json({
-            error: 'name and/or number is missing'
-        });
-    }
 
     // ignore duplicates at this stage
 
@@ -67,9 +62,11 @@ app.post('/api/persons', (req,res) => {
         number: body.number
     });
 
-    newPerson.save().then(addedPerson => {
-        res.status(200).json(addedPerson);
-    });
+    newPerson.save()
+        .then(addedPerson => {
+            res.status(200).json(addedPerson);
+        })
+        .catch(error => next(error));
 });
 
 app.put('/api/persons/:id', (req,res, next) => {
@@ -80,7 +77,10 @@ app.put('/api/persons/:id', (req,res, next) => {
         number: body.number
     };
 
-    Person.findByIdAndUpdate(id, person, { new: true })
+    Person.findByIdAndUpdate(id, person, { 
+        new: true,
+        runValidators: true
+    })
         .then(updatedPerson => {
             res.json(updatedPerson);
         })
@@ -93,6 +93,9 @@ const unknownEndpoint = (request, response) => {
 
 const errorHandler = (error, request, response, next) => {
     console.log(error);
+    if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message });
+    }
     next(error);
 };
 
